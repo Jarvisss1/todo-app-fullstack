@@ -6,7 +6,12 @@ const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 const app = express();
+
+// --- MIDDLEWARE ---
+// 1. Parse JSON bodies (from React Native App / Postman JSON)
 app.use(express.json());
+// 2. Parse URL-encoded bodies (from standard HTML forms or Postman x-www-form-urlencoded)
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const PORT = process.env.PORT || 3000;
@@ -66,7 +71,14 @@ app.get("/", (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   try {
+    // Debug log to see what the server is receiving
+    console.log("Register Request Body:", req.body);
+
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ error: "User already exists" });
@@ -76,14 +88,20 @@ app.post("/api/register", async (req, res) => {
     await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    console.error("Register Error:", err); // Log the real error
+    console.error("Register Error:", err);
     res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
 app.post("/api/login", async (req, res) => {
   try {
+    console.log("Login Request Body:", req.body);
+
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ error: "Invalid email or password" });
@@ -93,7 +111,7 @@ app.post("/api/login", async (req, res) => {
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "1d" });
     res.json({ token, email: user.email });
   } catch (err) {
-    console.error("Login Error:", err); // Log the real error
+    console.error("Login Error:", err);
     res.status(500).json({ error: "Server error", details: err.message });
   }
 });
