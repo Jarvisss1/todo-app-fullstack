@@ -57,9 +57,11 @@ const authMiddleware = (req, res, next) => {
 
 // --- ROUTES ---
 
-// ✅ 1. ADDED ROOT ROUTE (Fixes "Cannot GET /")
+// ✅ 1. ADDED ROOT ROUTE WITH DB CHECK (Helps Debugging)
 app.get("/", (req, res) => {
-  res.send("API is running live! 🚀");
+  const dbStatus =
+    mongoose.connection.readyState === 1 ? "Connected ✅" : "Disconnected ❌";
+  res.send(`API is running live! 🚀 <br/> Database Status: ${dbStatus}`);
 });
 
 app.post("/api/register", async (req, res) => {
@@ -74,7 +76,8 @@ app.post("/api/register", async (req, res) => {
     await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Register Error:", err); // Log the real error
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
@@ -90,7 +93,8 @@ app.post("/api/login", async (req, res) => {
     const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: "1d" });
     res.json({ token, email: user.email });
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Login Error:", err); // Log the real error
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
@@ -99,6 +103,7 @@ app.get("/api/tasks", authMiddleware, async (req, res) => {
     const tasks = await Task.find({ userId: req.user._id });
     res.json(tasks);
   } catch (err) {
+    console.error("Fetch Tasks Error:", err);
     res.status(500).json({ error: "Error fetching tasks" });
   }
 });
@@ -117,6 +122,7 @@ app.post("/api/tasks", authMiddleware, async (req, res) => {
     const savedTask = await newTask.save();
     res.json(savedTask);
   } catch (err) {
+    console.error("Create Task Error:", err);
     res.status(500).json({ error: "Error creating task" });
   }
 });
@@ -130,6 +136,7 @@ app.put("/api/tasks/:id", authMiddleware, async (req, res) => {
     );
     res.json(updatedTask);
   } catch (err) {
+    console.error("Update Task Error:", err);
     res.status(500).json({ error: "Error updating task" });
   }
 });
@@ -139,6 +146,7 @@ app.delete("/api/tasks/:id", authMiddleware, async (req, res) => {
     await Task.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     res.json({ message: "Task deleted" });
   } catch (err) {
+    console.error("Delete Task Error:", err);
     res.status(500).json({ error: "Error deleting task" });
   }
 });
