@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // REPLACE THIS WITH YOUR RENDER URL OR LOCAL IP
-const API_URL = 'http://10.0.2.2:3000/api'; 
+// const API_URL = 'http://10.0.2.2:3000/api'; 
+const API_URL = 'https://todo-app-fullstack-two.vercel.app/api'; 
 
 const api = axios.create({
   baseURL: API_URL,
