@@ -34,7 +34,7 @@ const TaskSchema = new mongoose.Schema({
     enum: ["Low", "Medium", "High"],
     default: "Medium",
   },
-  category: { type: String, default: "General" }, // New Field
+  category: { type: String, default: "General" },
   isCompleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
@@ -54,6 +54,13 @@ const authMiddleware = (req, res, next) => {
     res.status(400).json({ error: "Invalid Token" });
   }
 };
+
+// --- ROUTES ---
+
+// ✅ 1. ADDED ROOT ROUTE (Fixes "Cannot GET /")
+app.get("/", (req, res) => {
+  res.send("API is running live! 🚀");
+});
 
 app.post("/api/register", async (req, res) => {
   try {
@@ -98,7 +105,6 @@ app.get("/api/tasks", authMiddleware, async (req, res) => {
 
 app.post("/api/tasks", authMiddleware, async (req, res) => {
   try {
-    // UPDATED TO RECEIVE CATEGORY
     const { title, description, deadline, priority, category } = req.body;
     const newTask = new Task({
       userId: req.user._id,
@@ -137,7 +143,7 @@ app.delete("/api/tasks/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// --- VERCEL CONFIGURATION ---
 module.exports = app;
 
 // Only listen if NOT in production (Vercel handles the port automatically)
